@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>View Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/generator.css" />
+  </head>
+  <body>
+    <nav class="topnav">
+      <a href="/index.html" class="topnav-brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M2 4h12M2 8h8M2 12h10"
+              stroke="#fff"
+              stroke-width="1.8"
+              stroke-linecap="round"
+            />
+          </svg>
+        </div>
+        <span class="brand-label">AI Blog Generator</span>
+      </a>
+      <a href="/generator.html" class="nav-back">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path
+            d="M9 2L4 7l5 5"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        Back to generator
+      </a>
+    </nav>
+
+    <main class="shell blog-view-shell">
+      <div id="blog-view" class="blog-view-card">
+        <div class="empty-state">
+          <div class="empty-icon">...</div>
+          <p>Loading article...</p>
+        </div>
+      </div>
+    </main>
+
+    <script src="/static/blog-view.js"></script>
+  </body>
+</html>
+
