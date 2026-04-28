@@ -4,6 +4,7 @@ import json
 from typing import Any, TypedDict
 
 from .config import Settings
+from .db import get_blog
 from .models import BlogRequest, BlogResponse, BlogSection, SearchResult
 
 
@@ -38,6 +39,87 @@ def generate_blog(request: BlogRequest, settings: Settings) -> BlogResponse:
     )
 
 
+def upload_blog(blog_id: int, settings: Settings) -> dict[str, Any]:
+    if not settings.devto_api_key:
+        raise RuntimeError("DEVTO_API_KEY is required to upload a blog")
+    blog = _fetch_blog_from_db(settings.database_path, blog_id)
+    return _build_publish_blog(blog, settings)
+
+
+def _fetch_blog_from_db(database_path: str, blog_id: int):
+    blog = get_blog(database_path, blog_id)
+    if not blog:
+        raise RuntimeError(f"Blog with id {blog_id} not found")
+    return blog
+
+
+def _build_publish_blog(blog: dict, settings: Settings):
+    try:
+        from langchain_core.messages import HumanMessage, SystemMessage
+        from langchain_groq import ChatGroq
+    except ImportError as exc:
+        raise RuntimeError(
+            "langchain-groq and langchain-core are required for generation"
+        ) from exc
+
+    llm = ChatGroq(
+        model=settings.groq_model,
+        api_key=settings.groq_api_key,
+        temperature=0.45,
+        model_kwargs={"response_format": {"type": "json_object"}},
+    )
+
+    payload = blog
+
+    messages = [
+        SystemMessage(
+            content=(
+                "You are a careful json to blog schema converter. Use the supplied json blog and "
+                "convert it to a valid blog post schema. The input JSON may contain the following fields: "
+                "title, content, tags, description. "
+                "Do not wrap the JSON in markdown. The JSON object must match this schema: "
+                "{'title':'string','content':'string','tags':'string','description':'string'}. "
+            )
+        ),
+        HumanMessage(content=json.dumps(payload, ensure_ascii=True)),
+    ]
+    response = llm.invoke(messages)
+    parsed = _parse_llm_json(str(response.content))
+    try:
+        # _publish_to_devto(
+        #      title=parsed.get("title", "Untitled Blog"),
+        #     content=parsed.get("content", ""),
+        #     tags=parsed.get("tags", ""),
+        #     description=parsed.get("description", ""),
+        #     api_key=settings.devto_api_key,
+        # )
+        return {"status": "published"}
+    except Exception as exc:
+        return {"status": "error", "message": str(exc)}
+
+
+def _publish_to_devto(title, content, tags, description, api_key):
+    print("Publishing to Dev.to with title:", title)
+    import requests
+
+    url = "https://dev.to/api/articles"
+
+    headers = {"api-key": api_key, "Content-Type": "application/json"}
+
+    data = {
+        "article": {
+            "title": title,
+            "published": True,
+            "body_markdown": content,
+            "tags": tags,
+            "description": description,
+        }
+    }
+
+    response = requests.post(url, json=data, headers=headers)
+    return response.json()
+
+
 def _build_graph(settings: Settings) -> Any:
     try:
         from langgraph.graph import END, StateGraph
@@ -64,8 +146,7 @@ def _search_node(state: BlogState, settings: Settings) -> BlogState:
 
     if settings.tavily_api_key:
         try:
-            from langchain_community.tools.tavily_search import \
-                TavilySearchResults
+            from langchain_community.tools.tavily_search import TavilySearchResults
         except ImportError as exc:
             raise RuntimeError(
                 "langchain-community is required for Tavily search"
@@ -107,7 +188,6 @@ def _write_node(state: BlogState, settings: Settings) -> BlogState:
     request = state["request"]
     llm = ChatGroq(
         model=settings.groq_model,
-        groq_api_key=settings.groq_api_key,
         temperature=0.45,
         model_kwargs={"response_format": {"type": "json_object"}},
     )

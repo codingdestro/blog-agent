@@ -5,7 +5,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from .agent import generate_blog
+from .agent import generate_blog, upload_blog
 from .config import get_settings
 from .db import get_blog, init_db, list_all_blogs, list_blogs, save_blog
 from .files import read_upload_text
@@ -56,6 +56,11 @@ def create_app() -> FastAPI:
         if stored_blog is None:
             raise HTTPException(status_code=404, detail="Blog not found")
         return stored_blog
+
+    @app.get("/api/publish/{blog_id}")
+    async def publish_blog(blog_id:int) ->dict:
+        settings = get_settings()
+        return upload_blog(blog_id,settings)
 
     @app.post("/api/generate")
     async def generate(

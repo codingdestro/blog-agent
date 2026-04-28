@@ -83,3 +83,8 @@ function escapeAttribute(value) {
   return escapeHtml(value).replaceAll("`", "&#096;");
 }
 
+
+function publishBlog() {
+
+  console.log("Publish blog button clicked");
+}

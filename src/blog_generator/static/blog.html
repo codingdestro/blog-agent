@@ -15,7 +15,11 @@
     <nav class="topnav">
       <a href="/index.html" class="topnav-brand">
         <div class="brand-icon">
-          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
             <path
               d="M2 4h12M2 8h8M2 12h10"
               stroke="#fff"
@@ -41,6 +45,7 @@
     </nav>
 
     <main class="shell blog-view-shell">
+      <button class="btn-generate" style="margin-bottom: 1rem;" onclick="publishBlog()">Publish Blog to Dev.to</button>
       <div id="blog-view" class="blog-view-card">
         <div class="empty-state">
           <div class="empty-icon">...</div>
@@ -52,4 +57,3 @@
     <script src="/static/blog-view.js"></script>
   </body>
 </html>
-
