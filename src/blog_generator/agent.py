@@ -77,6 +77,7 @@ def _build_publish_blog(blog: dict, settings: Settings):
                 "You are a careful json to blog schema converter. Use the supplied json blog and "
                 "convert it to a valid blog post schema. The input JSON may contain the following fields: "
                 "title, content, tags, description. "
+                "conent must a proper mardown format with heading list etc."
                 "Do not wrap the JSON in markdown. The JSON object must match this schema: "
                 "{'title':'string','content':'string','tags':'string','description':'string'}. "
             )
@@ -85,14 +86,15 @@ def _build_publish_blog(blog: dict, settings: Settings):
     ]
     response = llm.invoke(messages)
     parsed = _parse_llm_json(str(response.content))
+    # print(parsed.get("content"))
     try:
-        # _publish_to_devto(
-        #      title=parsed.get("title", "Untitled Blog"),
-        #     content=parsed.get("content", ""),
-        #     tags=parsed.get("tags", ""),
-        #     description=parsed.get("description", ""),
-        #     api_key=settings.devto_api_key,
-        # )
+        _publish_to_devto(
+            title=parsed.get("title", "Untitled Blog"),
+            content=parsed.get("content", ""),
+            tags=parsed.get("tags", ""),
+            description=parsed.get("description", ""),
+            api_key=settings.devto_api_key,
+        )
         return {"status": "published"}
     except Exception as exc:
         return {"status": "error", "message": str(exc)}
@@ -141,12 +143,13 @@ def _build_graph(settings: Settings) -> Any:
 
 
 def _search_node(state: BlogState, settings: Settings) -> BlogState:
-    request = state["request"]
+    request = state.get("request")
     results: list[SearchResult] = []
 
     if settings.tavily_api_key:
         try:
-            from langchain_community.tools.tavily_search import TavilySearchResults
+            from langchain_community.tools.tavily_search import \
+                TavilySearchResults
         except ImportError as exc:
             raise RuntimeError(
                 "langchain-community is required for Tavily search"
@@ -165,7 +168,7 @@ def _search_node(state: BlogState, settings: Settings) -> BlogState:
 
 
 def _source_node(state: BlogState) -> BlogState:
-    request = state["request"]
+    request = state.get("request")
     notes = []
 
     for source in request.files:
@@ -185,9 +188,10 @@ def _write_node(state: BlogState, settings: Settings) -> BlogState:
             "langchain-groq and langchain-core are required for generation"
         ) from exc
 
-    request = state["request"]
+    request = state.get("request")
     llm = ChatGroq(
         model=settings.groq_model,
+        api_key=settings.groq_api_key,
         temperature=0.45,
         model_kwargs={"response_format": {"type": "json_object"}},
     )

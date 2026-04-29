@@ -50,6 +50,7 @@ function renderBlog(blog) {
       <div class="blog-view-meta">
         <span>${escapeHtml(blog.topic || "Saved blog")}</span>
         ${blog.created_at ? `<span>${escapeHtml(blog.created_at)}</span>` : ""}
+        <button id='btn-publish' class="btn-generate" style="margin-bottom: 1rem;" onclick="publishBlog(${blog.id})">Publish Blog to Dev.to</button>
       </div>
       <h1>${escapeHtml(blog.title || "Generated blog")}</h1>
       ${blog.summary ? `<p class="summary">${escapeHtml(blog.summary)}</p>` : ""}
@@ -83,8 +84,25 @@ function escapeAttribute(value) {
   return escapeHtml(value).replaceAll("`", "&#096;");
 }
 
+async function publishApi(id) {
+  try {
+    const res = await fetch(`/api/publish/${id}`, {
+      method: "POST",
+    });
+    const data = await res.json();
+    console.log(data);
+  } catch {
+    console.log("Got an error on publishing the blog to Dev.to");
+  }
+}
 
-function publishBlog() {
-
-  console.log("Publish blog button clicked");
+async function publishBlog(id) {
+  console.log("Publish blog button clicked with id ", id);
+  const btn = document.querySelector("#btn-publish");
+  btn.innerHTML = "Publishing...";
+  await publishApi(id);
+  btn.innerHTML = "Published";
+  setInterval(() => {
+    btn.innerHTML = "Publish Blog to Dev.to";
+  }, 2000);
 }

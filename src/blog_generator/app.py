@@ -57,10 +57,10 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=404, detail="Blog not found")
         return stored_blog
 
-    @app.get("/api/publish/{blog_id}")
-    async def publish_blog(blog_id:int) ->dict:
+    @app.post("/api/publish/{blog_id}")
+    async def publish_blog(blog_id: int) -> dict:
         settings = get_settings()
-        return upload_blog(blog_id,settings)
+        return upload_blog(blog_id, settings)
 
     @app.post("/api/generate")
     async def generate(
@@ -80,7 +80,9 @@ def create_app() -> FastAPI:
                 raise HTTPException(status_code=400, detail=str(exc)) from exc
             if content:
                 uploaded_sources.append(
-                    UploadedSource(filename=upload.filename or "upload.txt", content=content)
+                    UploadedSource(
+                        filename=upload.filename or "upload.txt", content=content
+                    )
                 )
 
         try:
