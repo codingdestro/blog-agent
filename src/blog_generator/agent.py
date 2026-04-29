@@ -18,6 +18,9 @@ class BlogState(TypedDict, total=False):
     sections: list[BlogSection]
     conclusion: str
     article: str
+    keywords: list[str]
+    meta_description: str
+    seo_suggestions: list[str]
 
 
 def generate_blog(request: BlogRequest, settings: Settings) -> BlogResponse:
@@ -36,6 +39,9 @@ def generate_blog(request: BlogRequest, settings: Settings) -> BlogResponse:
         article=state["article"],
         source_notes=state["source_notes"],
         search_results=state["search_results"],
+        keywords=state.get("keywords", []),
+        meta_description=state.get("meta_description", ""),
+        seo_suggestions=state.get("seo_suggestions", []),
     )
 
 
@@ -134,11 +140,13 @@ def _build_graph(settings: Settings) -> Any:
     graph.add_node("search", lambda state: _search_node(state, settings))
     graph.add_node("sources", _source_node)
     graph.add_node("write", lambda state: _write_node(state, settings))
+    graph.add_node("seo", lambda state: _seo_node(state, settings))
 
     graph.set_entry_point("search")
     graph.add_edge("search", "sources")
     graph.add_edge("sources", "write")
-    graph.add_edge("write", END)
+    graph.add_edge("write", "seo")
+    graph.add_edge("seo", END)
     return graph.compile()
 
 
@@ -238,6 +246,52 @@ def _write_node(state: BlogState, settings: Settings) -> BlogState:
         "sections": sections,
         "conclusion": str(parsed.get("conclusion") or "").strip(),
         "article": article,
+    }
+
+
+def _seo_node(state: BlogState, settings: Settings) -> BlogState:
+    try:
+        from langchain_core.messages import HumanMessage, SystemMessage
+        from langchain_groq import ChatGroq
+    except ImportError as exc:
+        raise RuntimeError(
+            "langchain-groq and langchain-core are required for analysis"
+        ) from exc
+
+    article = state.get("article", "")
+    title = state.get("title", "")
+
+    llm = ChatGroq(
+        model=settings.groq_model,
+        api_key=settings.groq_api_key,
+        temperature=0.1,  # Lower temperature for analytical task
+        model_kwargs={"response_format": {"type": "json_object"}},
+    )
+
+    prompt = (
+        "You are an SEO Specialist agent. Analyze the following blog post and title. "
+        "Extract key keywords, generate a compelling meta description (max 160 chars), "
+        "and provide 3-5 actionable SEO suggestions (e.g., 'Add a call to action', 'Use more descriptive subheadings'). "
+        "Return the results in the following JSON format: "
+        '{"keywords": ["word1", "word2"], "meta_description": "string", "suggestions": ["suggestion1", "suggestion2"]}. '
+        "Do not wrap the JSON in markdown.\n\n"
+        f"Title: {title}\n"
+        f"Content: {article[:4000]}"  # Limit content to stay within context limits if blog is very long
+    )
+
+    messages = [
+        SystemMessage(content="You are a professional SEO analyzer."),
+        HumanMessage(content=prompt),
+    ]
+
+    response = llm.invoke(messages)
+    parsed = _parse_llm_json(str(response.content))
+
+    return {
+        **state,
+        "keywords": parsed.get("keywords", []),
+        "meta_description": parsed.get("meta_description", ""),
+        "seo_suggestions": parsed.get("suggestions", []),
     }
 
 

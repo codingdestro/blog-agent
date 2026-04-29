@@ -1,17 +1,34 @@
-# Blog Generator
+# AI-Agent Blog Generator: Multi-Agent Orchestration
 
-Python project for generating blog drafts with AI agents. It uses LangGraph for the workflow, LangChain integrations for Groq and Tavily, Groq-hosted Llama models for writing, and a static frontend served by FastAPI.
+A sophisticated, production-ready AI content engine that automates the research, drafting, and optimization of blog posts. This project utilizes a **Multi-Agent Architecture** powered by **LangGraph** to deliver high-quality, SEO-optimized content grounded in real-time data.
 
-## Features
+## 🚀 Key Features
 
-- Generate a blog from a topic.
-- Upload text-like files for source context.
-- Search current information automatically with Tavily.
-- Draft structured blog content with a Groq Llama model.
-- Use a static browser UI or call the HTTP API directly.
+- **Multi-Agent Workflow:** Orchestrates specialized agents (Research, Writer, SEO Specialist) for superior content quality.
+- **Real-Time Research:** Integrates **Tavily Search API** to ground articles in the latest facts and data.
+- **Context-Aware Generation:** Supports file uploads (TXT, PDF, etc.) to integrate local knowledge into the AI's writing.
+- **SEO Specialist Agent:** Automated analysis of every post, including keyword extraction, meta-description generation, and structural suggestions.
+- **One-Click Publishing:** Direct integration with the **Dev.to API** to publish drafts instantly.
+- **Stateful Persistence:** All generated content and analysis are stored in a local SQLite database.
+- **Modern Responsive UI:** A clean SPA built with Vanilla JS and CSS for a fast, interactive experience.
 
-## Setup
+## 🏗 Architecture Overview
 
+The system follows an agentic pipeline managed by **LangGraph**:
+
+1.  **Search Node:** Conducts web research based on the topic.
+2.  **Source Node:** Extracts context from user-provided files.
+3.  **Write Node:** Synthesizes research and context into a structured blog post using **Llama 3.3 (Groq)**.
+4.  **SEO Node:** Performs an analytical audit of the draft to provide optimization data.
+5.  **Publishing:** (Optional) Converts and uploads the final draft to Dev.to.
+
+## 🛠 Setup & Installation
+
+### Prerequisites
+- Python 3.11+
+- API Keys for: [Groq](https://console.groq.com/), [Tavily](https://tavily.com/), and [Dev.to](https://dev.to/settings/extensions) (Optional).
+
+### Installation
 ```bash
 python -m venv .venv
 source .venv/bin/activate
@@ -19,75 +36,40 @@ pip install -e ".[dev]"
 cp .env.example .env
 ```
 
-Edit `.env` and add `GROQ_API_KEY` and `TAVILY_API_KEY`.
-Set `DATABASE_PATH` if you want SQLite data stored somewhere other than `app.db`.
+### Configuration
+Edit `.env` and provide your keys:
+```env
+GROQ_API_KEY=your_key_here
+TAVILY_API_KEY=your_key_here
+DEVTO_API_KEY=your_key_here  # For one-click publishing
+```
 
-## Run
+## ⚡ Execution
 
-Single command:
-
+Run the application using the provided script:
 ```bash
 ./run.sh
 ```
+The application will be available at `http://127.0.0.1:8000`.
 
-Or manually:
+### UI Endpoints:
+- `/index.html`: Project dashboard and history.
+- `/generator.html`: The main AI workspace for content generation.
+- `/blog.html?id={id}`: Dedicated reader view with SEO analysis scorecard.
 
-```bash
-uvicorn blog_generator.app:create_app --factory --reload
-```
+## 🐳 Docker Deployment
 
-Open `http://127.0.0.1:8000`.
-
-Frontend pages:
-
-- `/index.html`: project landing page.
-- `/generator.html`: blog generation page.
-- `/blog.html?id={blog_id}`: saved blog detail page.
-
-## Docker
-
-Build the image:
-
+Build and run in an isolated environment:
 ```bash
 docker build -t blog-generator .
+docker run --rm -p 8000:8000 --env-file .env blog-generator
 ```
 
-Run the container:
+## 🧪 Development & Validation
 
-```bash
-docker run --rm -p 8000:8000 \
-  -e GROQ_API_KEY=your_groq_api_key \
-  -e TAVILY_API_KEY=your_tavily_api_key \
-  -e GROQ_MODEL=llama-3.3-70b-versatile \
-  blog-generator
-```
+- **Testing:** `pytest`
+- **Linting:** `ruff check .`
+- **Type Checking:** `mypy src/`
 
-Open `http://127.0.0.1:8000`.
-
-## API
-
-`POST /api/generate`
-
-Multipart form fields:
-
-- `topic`: required blog topic.
-- `tone`: optional writing tone.
-- `audience`: optional target audience.
-- `word_count`: optional approximate target length.
-- `files`: optional uploaded source files.
-
-The response contains the generated title, outline, article, source notes, and search results.
-Generated blogs are saved to SQLite after successful generation.
-
-Saved blog endpoints:
-
-- `GET /api/blogs`: list all saved blogs with full structured content.
-- `GET /api/blogs/summaries`: list saved blog summaries.
-- `GET /api/blogs/{blog_id}`: fetch one saved blog with structured fields.
-
-## Validate
-
-```bash
-pytest
-ruff check .
-```
+---
+*Developed as a Final Year Project demonstrating Advanced AI Orchestration and Multi-Agent Systems.*

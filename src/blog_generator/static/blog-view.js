@@ -20,7 +20,6 @@ async function loadBlog() {
     renderError(error.message);
   }
 }
-
 function renderBlog(blog) {
   const outline = (blog.outline || [])
     .map((item) => `<li>${escapeHtml(item)}</li>`)
@@ -29,7 +28,7 @@ function renderBlog(blog) {
     .map(
       (section) => `
         <section class="blog-section">
-          <h2>${escapeHtml(section.heading || "Section")}</h2>
+          <h3>${escapeHtml(section.heading || "Section")}</h3>
           <p>${escapeHtml(section.body || "")}</p>
         </section>
       `,
@@ -45,22 +44,41 @@ function renderBlog(blog) {
     )
     .join("");
 
-  blogView.innerHTML = `
-    <article class="article blog-view-article">
+  const keywords = (blog.keywords || [])
+    .map((k) => `<span class="badge">${escapeHtml(k)}</span>`)
+    .join(" ");
+
+  const suggestions = (blog.seo_suggestions || [])
+    .map((s) => `<li>${escapeHtml(s)}</li>`)
+    .join("");
+
+  const container = document.getElementById("blog-view");
+  container.innerHTML = `
+    <article class="article">
       <div class="blog-view-meta">
         <span>${escapeHtml(blog.topic || "Saved blog")}</span>
         ${blog.created_at ? `<span>${escapeHtml(blog.created_at)}</span>` : ""}
         <button id='btn-publish' class="btn-generate" style="margin-bottom: 1rem;" onclick="publishBlog(${blog.id})">Publish Blog to Dev.to</button>
       </div>
       <h1>${escapeHtml(blog.title || "Generated blog")}</h1>
+
       ${blog.summary ? `<p class="summary">${escapeHtml(blog.summary)}</p>` : ""}
-      ${outline ? `<h2>Outline</h2><ol>${outline}</ol>` : ""}
+
+      <div class="seo-card">
+        <h3>SEO Analysis</h3>
+        <p><strong>Meta Description:</strong> ${escapeHtml(blog.meta_description || "N/A")}</p>
+        <p><strong>Keywords:</strong> ${keywords || "None"}</p>
+        ${suggestions ? `<strong>Suggestions:</strong><ul>${suggestions}</ul>` : ""}
+      </div>
+
+      ${outline ? `<h3>Outline</h3><ol>${outline}</ol>` : ""}
       ${sections || `<pre>${escapeHtml(blog.article || "")}</pre>`}
-      ${blog.conclusion ? `<h2>Conclusion</h2><p>${escapeHtml(blog.conclusion)}</p>` : ""}
-      ${sources ? `<h2>Search sources</h2><ul class="sources">${sources}</ul>` : ""}
+      ${blog.conclusion ? `<h3>Conclusion</h3><p>${escapeHtml(blog.conclusion)}</p>` : ""}
+      ${sources ? `<h3>Search sources</h3><ul class="sources">${sources}</ul>` : ""}
     </article>
   `;
 }
+
 
 function renderError(message) {
   blogView.innerHTML = `

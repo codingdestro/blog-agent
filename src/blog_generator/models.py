@@ -35,3 +35,6 @@ class BlogResponse(BaseModel):
     article: str
     source_notes: list[str]
     search_results: list[SearchResult]
+    keywords: list[str] = Field(default_factory=list)
+    meta_description: str = ""
+    seo_suggestions: list[str] = Field(default_factory=list)

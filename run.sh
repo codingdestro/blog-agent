@@ -35,4 +35,5 @@ echo "Starting Blog Generator at http://$HOST:$PORT"
 exec "$RUNNER_PYTHON" -m uvicorn blog_generator.app:create_app \
   --factory \
   --host "$HOST" \
-  --port "$PORT"
+  --port "$PORT" \
+  --reload

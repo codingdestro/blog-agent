@@ -79,15 +79,34 @@ function renderBlog(blog) {
     )
     .join("");
 
+  const keywords = (blog.keywords || [])
+    .map((k) => `<span class="badge">${escapeHtml(k)}</span>`)
+    .join(" ");
+
+  const suggestions = (blog.seo_suggestions || [])
+    .map((s) => `<li>${escapeHtml(s)}</li>`)
+    .join("");
+
   output.innerHTML = `
     <article class="article">
-      <h2>${escapeHtml(blog.title || "Generated blog")}</h2>
-      ${
-        blog.id
-          ? `<p><a class="btn-view" href="/blog.html?id=${escapeAttribute(blog.id)}">View saved blog</a></p>`
-          : ""
-      }
+      <div class="blog-header">
+        <h2>${escapeHtml(blog.title || "Generated blog")}</h2>
+        ${
+          blog.id
+            ? `<a class="btn-view" href="/blog.html?id=${escapeAttribute(blog.id)}">View saved blog</a>`
+            : ""
+        }
+      </div>
+      
       ${blog.summary ? `<p class="summary">${escapeHtml(blog.summary)}</p>` : ""}
+      
+      <div class="seo-card">
+        <h3>SEO Analysis</h3>
+        <p><strong>Meta Description:</strong> ${escapeHtml(blog.meta_description || "N/A")}</p>
+        <p><strong>Keywords:</strong> ${keywords || "None"}</p>
+        ${suggestions ? `<strong>Suggestions:</strong><ul>${suggestions}</ul>` : ""}
+      </div>
+
       ${outline ? `<h3>Outline</h3><ol>${outline}</ol>` : ""}
       <h3>Draft</h3>
       ${sections || `<pre>${escapeHtml(blog.article || "")}</pre>`}

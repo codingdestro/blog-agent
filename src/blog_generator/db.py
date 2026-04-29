@@ -26,6 +26,9 @@ def init_db(database_path: str) -> None:
                 tone TEXT NOT NULL DEFAULT '',
                 audience TEXT NOT NULL DEFAULT '',
                 word_count INTEGER NOT NULL DEFAULT 0,
+                keywords_json TEXT NOT NULL DEFAULT '[]',
+                meta_description TEXT NOT NULL DEFAULT '',
+                seo_suggestions_json TEXT NOT NULL DEFAULT '[]',
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
             """)
@@ -49,9 +52,12 @@ def save_blog(database_path: str, request: BlogRequest, response: BlogResponse) 
                 search_results_json,
                 tone,
                 audience,
-                word_count
+                word_count,
+                keywords_json,
+                meta_description,
+                seo_suggestions_json
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 request.topic,
@@ -66,6 +72,9 @@ def save_blog(database_path: str, request: BlogRequest, response: BlogResponse) 
                 request.tone,
                 request.audience,
                 request.word_count,
+                _dump_json(response.keywords),
+                response.meta_description,
+                _dump_json(response.seo_suggestions),
             ),
         )
         conn.commit()
@@ -110,6 +119,10 @@ def _decode_blog_row(row: sqlite3.Row) -> dict:
     blog["source_notes"] = _load_json(str(blog.pop("source_notes_json")), default=[])
     blog["search_results"] = _load_json(
         str(blog.pop("search_results_json")), default=[]
+    )
+    blog["keywords"] = _load_json(str(blog.pop("keywords_json")), default=[])
+    blog["seo_suggestions"] = _load_json(
+        str(blog.pop("seo_suggestions_json")), default=[]
     )
     return blog
 
